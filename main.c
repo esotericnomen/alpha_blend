@@ -4,8 +4,6 @@
 #define OVERLAY_ERROR_NOT_SUPPORTED_YET -1
 #define OVERLAY_ERROR_NULL_PTR -2
 
-#define ENABLE_TEST
-
 typedef unsigned char uchar_t;
 
 void write_data(unsigned char *buffer, const char *file_name, const long size) {
