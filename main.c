@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define OVERLAY_ERROR_NOT_SUPPORTED_YET -1
+#define OVERLAY_ERROR_NULL_PTR -2
+
+#define ENABLE_TEST
+
 typedef unsigned char uchar_t;
 
 void write_data(unsigned char *buffer, const char *file_name, const long size) {
@@ -18,16 +23,16 @@ int OverlayMousePointer(unsigned char *frame_buffer,
     // corner cases will be handled latter
     if( (x_coordinate + 32 > 639) ||
             (y_coordinate + 32 > 479) )
-        return -1;
+        return OVERLAY_ERROR_NOT_SUPPORTED_YET;
 
     if(!frame_buffer || !mouse_buffer)
-        return -2;
+        return OVERLAY_ERROR_NULL_PTR;
+
     for(int j=0;j<32;j++) {
         unsigned int index = (x_coordinate + j)* 2 * 640 + (y_coordinate + j) * 2;
 
         for(int i=0; i<32; i++) {
             unsigned int *tmp = (unsigned int*)&(frame_buffer[index-2]);
-            printf("tmp : %p Pixel : [%3u][%3u] | %2u %2u %2u \n",tmp, (index/2)/640, (index/2)%640, *tmp >> 0xB & 0x1F, *tmp >> 0x5 & 0x3F, *tmp & 0x1F);
 
             unsigned char fb_R = *tmp >> 0xB & 0x1F;
             unsigned char fb_G =  *tmp >> 0x5 & 0x3F;
@@ -45,7 +50,6 @@ int OverlayMousePointer(unsigned char *frame_buffer,
             unsigned char blend_G = (mouse_G * mouse_alpha) + (fb_G * inv_alpha);
             unsigned char blend_B = (mouse_B * mouse_alpha) + (fb_B * inv_alpha);
             *tmp = (blend_R & 0x1F) << 0xB | (blend_G & 0x3F) << 0x5 | (blend_B & 0x1F);
-            printf(" %2u %2u %2u\n",*tmp >> 0xB & 0x1F, *tmp >> 0x5 & 0x3F, *tmp & 0x1F);
             index+=2;
         }
     }
@@ -74,7 +78,9 @@ int main() {
         frame_buffer[i++] = (unsigned char) (fb_rgb >> 8) & 0xFF;
         frame_buffer[i++] = (unsigned char) (fb_rgb & 0xFF);
         unsigned int *tmp = (unsigned int*)&(frame_buffer[i-2]);
+#ifdef ENABLE_TEST
         printf("tmp : %p Pixel : [%3u][%3u] | %2u %2u %2u\n",tmp, (i/2)/640, (i/2)%640, *tmp >> 0xB & 0x1F, *tmp >> 0x5 & 0x3F, *tmp & 0x1F);
+#endif // ENABLE_TEST
     }
 
     /*
@@ -92,16 +98,20 @@ int main() {
         mouse_buffer[i++] = rand()%255;        // G
         mouse_buffer[i++] = rand()%255;        // B
         mouse_buffer[i++] = rand()%255;        // Alpha
+#ifdef ENABLE_TEST
         printf("mPixel : [%3u][%3u] | %2u %2u %2u %2u\n", (i/4)/32, (i/4)%32, mouse_buffer[i-4], mouse_buffer[i-3],mouse_buffer[i-2],mouse_buffer[i-1]);
+#endif // ENABLE_TEST
     }
     unsigned int x_coordinate = rand()%640;
     unsigned int y_coordinate = rand()%480;
 
+#ifdef ENABLE_TEST
     /*Use predetrmined coordinates for fast testing*/
     x_coordinate = 10;
     y_coordinate = 10;
 
     printf("x_coordinate : %d, y_coordinate: %d\n",x_coordinate, y_coordinate);
+#endif // ENABLE_TEST
 
     write_data(frame_buffer,"./frame_buffer.dat",640*480*2);
 
