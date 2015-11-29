@@ -22,34 +22,34 @@ int OverlayMousePointer(unsigned char *frame_buffer,
 
     if(!frame_buffer || !mouse_buffer)
         return -2;
+    for(int j=0;j<32;j++) {
+        unsigned int index = (x_coordinate + j)* 2 * 640 + (y_coordinate + j) * 2;
 
-    unsigned int index = (x_coordinate)* 2 * 640 + (y_coordinate) * 2;
+        for(int i=0; i<32; i++) {
+            unsigned int *tmp = (unsigned int*)&(frame_buffer[index-2]);
+            printf("tmp : %p Pixel : [%3u][%3u] | %2u %2u %2u \n",tmp, (index/2)/640, (index/2)%640, *tmp >> 0xB & 0x1F, *tmp >> 0x5 & 0x3F, *tmp & 0x1F);
 
-    for(int i=0; i<32; i++) {
-        unsigned int *tmp = (unsigned int*)&(frame_buffer[index-2]);
-        printf("tmp : %p Pixel : [%3u][%3u] | %2u %2u %2u \n",tmp, (index/2)/640, (index/2)%640, *tmp >> 0xB & 0x1F, *tmp >> 0x5 & 0x3F, *tmp & 0x1F);
+            unsigned char fb_R = *tmp >> 0xB & 0x1F;
+            unsigned char fb_G =  *tmp >> 0x5 & 0x3F;
+            unsigned char fb_B =  *tmp & 0x1F;
 
-        unsigned char fb_R = *tmp >> 0xB & 0x1F;
-        unsigned char fb_G =  *tmp >> 0x5 & 0x3F;
-        unsigned char fb_B =  *tmp & 0x1F;
+            unsigned char mouse_R = mouse_buffer[i*4];
+            unsigned char mouse_G = mouse_buffer[(i*4)+1];
+            unsigned char mouse_B = mouse_buffer[(i*4)+2];
+            unsigned char mouse_alpha = mouse_buffer[(i*4)+3];
+            unsigned char inv_alpha = 256 - mouse_alpha;
 
-        unsigned char mouse_R = mouse_buffer[i*4];
-        unsigned char mouse_G = mouse_buffer[(i*4)+1];
-        unsigned char mouse_B = mouse_buffer[(i*4)+2];
-        unsigned char mouse_alpha = mouse_buffer[(i*4)+3];
-        unsigned char inv_alpha = 256 - mouse_alpha;
+            /*outputRed = (foregroundRed * foregroundAlpha) + (backgroundRed * (1.0 - foregroundAlpha));*/
 
-        /*outputRed = (foregroundRed * foregroundAlpha) + (backgroundRed * (1.0 - foregroundAlpha));*/
-
-        unsigned char blend_R = (mouse_R * mouse_alpha) + (fb_R * inv_alpha);
-        unsigned char blend_G = (mouse_G * mouse_alpha) + (fb_G * inv_alpha);
-        unsigned char blend_B = (mouse_B * mouse_alpha) + (fb_B * inv_alpha);
-        *tmp = (blend_R & 0x1F) << 0xB | (blend_G & 0x3F) << 0x5 | (blend_B & 0x1F);
-        printf(" %2u %2u %2u\n",*tmp >> 0xB & 0x1F, *tmp >> 0x5 & 0x3F, *tmp & 0x1F);
-        index+=2;
+            unsigned char blend_R = (mouse_R * mouse_alpha) + (fb_R * inv_alpha);
+            unsigned char blend_G = (mouse_G * mouse_alpha) + (fb_G * inv_alpha);
+            unsigned char blend_B = (mouse_B * mouse_alpha) + (fb_B * inv_alpha);
+            *tmp = (blend_R & 0x1F) << 0xB | (blend_G & 0x3F) << 0x5 | (blend_B & 0x1F);
+            printf(" %2u %2u %2u\n",*tmp >> 0xB & 0x1F, *tmp >> 0x5 & 0x3F, *tmp & 0x1F);
+            index+=2;
+        }
     }
 }
-
 
 int main() {
     unsigned char frame_buffer[640*480*2];
