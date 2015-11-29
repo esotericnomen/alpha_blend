@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef unsigned char uchar_t;
 
@@ -9,6 +10,40 @@ void write_data(unsigned char *buffer, const char *file_name, const long size) {
     return;
 }
 
+int OverlayMousePointer(unsigned char *frame_buffer,
+        unsigned char *mouse_buffer,
+        unsigned int x_coordinate,
+        unsigned int y_coordinate){
+
+    // corner cases will be handled latter
+    if( (x_coordinate + 32 > 639) ||
+            (y_coordinate + 32 > 479) )
+        return -1;
+
+    if(!frame_buffer || !mouse_buffer)
+        return -2;
+
+    unsigned int index = (x_coordinate)* 2 * 640 + (y_coordinate) * 2;
+
+    for(int i=0; i<32; i++) {
+        unsigned int *tmp = (unsigned int*)&(frame_buffer[index-2]);
+        printf("tmp : %p Pixel : [%3u][%3u] | %2u %2u %2u \n",tmp, (index/2)/640, (index/2)%640, *tmp >> 0xB & 0x1F, *tmp >> 0x5 & 0x3F, *tmp & 0x1F);
+
+        unsigned char fb_R = *tmp >> 0xB & 0x1F;
+        unsigned char fb_G =  *tmp >> 0x5 & 0x3F;
+        unsigned char fb_B =  *tmp & 0x1F;
+
+        unsigned char mouse_R = mouse_buffer[i*4];
+        unsigned char mouse_G = mouse_buffer[(i*4)+1];
+        unsigned char mouse_B = mouse_buffer[(i*4)+2];
+        unsigned char mouse_alpha = mouse_buffer[(i*4)+3];
+
+        index+=2;
+    }
+}
+
+
+
 int main() {
     unsigned char frame_buffer[640*480*2];
     unsigned char mouse_buffer[32*32*4];
@@ -16,7 +51,7 @@ int main() {
 
     /* 
        Form the frame buffer and mouse buffer data for testing
-    */
+     */
     /*
        Frame buffer structure and components representation
 
@@ -26,7 +61,7 @@ int main() {
        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
        |       R      |         G       |      B       |
        -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-    */
+     */
     for(i = 0; i < 640 * 480 * 2;) {
         unsigned int fb_rgb = rand() % 0xFFFF;
         frame_buffer[i++] = (unsigned char) (fb_rgb >> 8) & 0xFF;
@@ -52,6 +87,9 @@ int main() {
         mouse_buffer[i++] = rand()%255;        // Alpha
         printf("mPixel : [%3u][%3u] | %2u %2u %2u %2u\n", (i/4)/32, (i/4)%32, mouse_buffer[i-4], mouse_buffer[i-3],mouse_buffer[i-2],mouse_buffer[i-1]);
     }
+    unsigned int x_coordinate = rand()%640;
+    unsigned int y_coordinate = rand()%480;
 
     write_data(frame_buffer,"./frame_buffer.dat",640*480*2);
+    OverlayMousePointer(frame_buffer, mouse_buffer, x_coordinate, y_coordinate);
 }
