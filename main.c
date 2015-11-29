@@ -2,6 +2,13 @@
 
 typedef unsigned char uchar_t;
 
+void write_data(unsigned char *buffer, const char *file_name, const long size) {
+    FILE *fp = fopen(file_name,"a");
+    fwrite(buffer, 1, size, fp);
+    fclose(fp);
+    return;
+}
+
 int main() {
     unsigned char frame_buffer[640*480*2];
     unsigned char mouse_buffer[32*32*4];
@@ -45,4 +52,6 @@ int main() {
         mouse_buffer[i++] = rand()%255;        // Alpha
         printf("mPixel : [%3u][%3u] | %2u %2u %2u %2u\n", (i/4)/32, (i/4)%32, mouse_buffer[i-4], mouse_buffer[i-3],mouse_buffer[i-2],mouse_buffer[i-1]);
     }
+
+    write_data(frame_buffer,"./frame_buffer.dat",640*480*2);
 }
