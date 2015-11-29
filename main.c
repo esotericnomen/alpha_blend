@@ -37,11 +37,18 @@ int OverlayMousePointer(unsigned char *frame_buffer,
         unsigned char mouse_G = mouse_buffer[(i*4)+1];
         unsigned char mouse_B = mouse_buffer[(i*4)+2];
         unsigned char mouse_alpha = mouse_buffer[(i*4)+3];
+        unsigned char inv_alpha = 256 - mouse_alpha;
 
+        /*outputRed = (foregroundRed * foregroundAlpha) + (backgroundRed * (1.0 - foregroundAlpha));*/
+
+        unsigned char blend_R = (mouse_R * mouse_alpha) + (fb_R * inv_alpha);
+        unsigned char blend_G = (mouse_G * mouse_alpha) + (fb_G * inv_alpha);
+        unsigned char blend_B = (mouse_B * mouse_alpha) + (fb_B * inv_alpha);
+        *tmp = (blend_R & 0x1F) << 0xB | (blend_G & 0x3F) << 0x5 | (blend_B & 0x1F);
+        printf(" %2u %2u %2u\n",*tmp >> 0xB & 0x1F, *tmp >> 0x5 & 0x3F, *tmp & 0x1F);
         index+=2;
     }
 }
-
 
 
 int main() {
@@ -90,6 +97,15 @@ int main() {
     unsigned int x_coordinate = rand()%640;
     unsigned int y_coordinate = rand()%480;
 
+    /*Use predetrmined coordinates for fast testing*/
+    x_coordinate = 10;
+    y_coordinate = 10;
+
+    printf("x_coordinate : %d, y_coordinate: %d\n",x_coordinate, y_coordinate);
+
     write_data(frame_buffer,"./frame_buffer.dat",640*480*2);
+
     OverlayMousePointer(frame_buffer, mouse_buffer, x_coordinate, y_coordinate);
+
+    write_data(frame_buffer,"./blend_frame_buffer.dat",640*480*2);
 }
